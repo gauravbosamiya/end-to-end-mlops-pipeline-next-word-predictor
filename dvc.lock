@@ -1,0 +1,56 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python src/data/data_ingestion.py
+    deps:
+    - path: src/data/data_ingestion.py
+      hash: md5
+      md5: 117247967f969c075f3361698dad1d61
+      size: 2375
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: cf49b55a7f7b624478bc43bef9bc8777.dir
+      size: 100017
+      nfiles: 1
+  data_preprocessing:
+    cmd: python src/data/data_preprocessing.py
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: cf49b55a7f7b624478bc43bef9bc8777.dir
+      size: 100017
+      nfiles: 1
+    - path: src/data/data_preprocessing.py
+      hash: md5
+      md5: 98481158403f39c3f3eaa7571d4d4390
+      size: 2570
+    outs:
+    - path: data/interim
+      hash: md5
+      md5: 8490f8079e601bbad4fd57f0785f166c.dir
+      size: 934843040
+      nfiles: 2
+  feature_engineering:
+    cmd: python src/features/feature_engineering.py
+    deps:
+    - path: data/interim
+      hash: md5
+      md5: 8490f8079e601bbad4fd57f0785f166c.dir
+      size: 934843040
+      nfiles: 2
+    - path: src/features/feature_engineering.py
+      hash: md5
+      md5: a394bc60ca95d0ca58c68376897d8d68
+      size: 3507
+    params:
+      params.yaml:
+        feature_engineering.num_classes: 883
+        feature_engineering.random_state: 42
+        feature_engineering.test_size: 0.2
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: 5b22a7a7c5f91e4e7a8daba2e445e652.dir
+      size: 1042757356
+      nfiles: 4

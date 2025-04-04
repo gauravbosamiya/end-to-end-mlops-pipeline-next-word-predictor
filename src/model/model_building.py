@@ -1,29 +1,34 @@
 import numpy as np
 import tensorflow as tf
+import mlflow
+import mlflow.keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
 import yaml
 import os
-from src.logger import logging
+import dagshub
+import logging
 
-# Load parameters from params.yaml (configuration file)
+# Set up logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+# MLflow & DAGsHub tracking
+MLFLOW_TRACKING_URI = "https://dagshub.com/gauravbosamiya/end-to-end-mlops-pipeline-next-word-predictor.mlflow"
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+dagshub.init(repo_owner="gauravbosamiya", repo_name="end-to-end-mlops-pipeline-next-word-predictor", mlflow=True)
+
+# Load parameters
 def load_params(params_path):
     try:
         with open(params_path, "r") as file:
             params = yaml.safe_load(file)
-        logging.debug("Parameters loaded from %s", params_path)
+        logging.info(f"Parameters loaded from {params_path}")
         return params
-    except FileNotFoundError:
-        logging.error("File not found: %s", params_path)
-        raise
-    except yaml.YAMLError as e:
-        logging.error("YAML Error: %s", e)
-        raise
     except Exception as e:
-        logging.error("Unexpected error: %s", e)
+        logging.error(f"Error loading parameters: {e}")
         raise
 
-# Load data (X_train, y_train, X_val, y_val)
+# Load data
 def load_data(file_path_X, file_path_y):
     try:
         X_data = np.load(file_path_X)
@@ -31,36 +36,27 @@ def load_data(file_path_X, file_path_y):
         logging.info("Data loaded successfully.")
         return X_data, y_data
     except Exception as e:
-        logging.error("Error loading data: %s", e)
+        logging.error(f"Error loading data: {e}")
         raise
 
-# Build LSTM Model for Next Word Prediction
-def build_model(vocab_size, sequence_length, embedding_dim=100, lstm_units=256):
+# Build LSTM Model
+def build_model(vocab_size, sequence_length, embedding_dim, lstm_units, dropout):
     try:
-        model = Sequential()
-        # Embedding Layer
-        model.add(Embedding(vocab_size, embedding_dim, input_length=sequence_length))
-
-        # LSTM Layer
-        model.add(LSTM(lstm_units, return_sequences=False))
-        
-        # Dropout Layer (to reduce overfitting)
-        model.add(Dropout(0.2))
-        
-        # Dense Layer with Softmax to predict the next word
-        model.add(Dense(vocab_size, activation='softmax'))
-        
-        # Compile the model
+        model = Sequential([
+            Embedding(vocab_size, embedding_dim, input_length=sequence_length),
+            LSTM(lstm_units, return_sequences=False),
+            Dropout(dropout),
+            Dense(vocab_size, activation='softmax')
+        ])
         model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
-        
         logging.info(f"Model built with vocab size: {vocab_size}, sequence length: {sequence_length}")
         return model
     except Exception as e:
-        logging.error("Error in model building: %s", e)
+        logging.error(f"Error in model building: {e}")
         raise
 
 # Train the model
-def train_model(model, X_train, y_train, X_val, y_val, batch_size=32, epochs=5):
+def train_model(model, X_train, y_train, X_val, y_val, batch_size, epochs):
     try:
         history = model.fit(
             X_train, y_train, 
@@ -72,44 +68,78 @@ def train_model(model, X_train, y_train, X_val, y_val, batch_size=32, epochs=5):
         logging.info("Model training completed.")
         return history
     except Exception as e:
-        logging.error("Error in model training: %s", e)
+        logging.error(f"Error in model training: {e}")
         raise
 
-# Save the trained model
+# Save the trained model locally
 def save_model(model, file_path):
     try:
-        model.save(file_path)
-        logging.info(f"Model saved to {file_path}")
+        model.save(file_path, save_format='h5')  # Explicit format
+        logging.info(f"Model saved locally at {file_path}")
     except Exception as e:
-        logging.error("Error saving the model: %s", e)
+        logging.error(f"Error saving the model: {e}")
         raise
 
-# Main function
+# Main function with MLflow Tracking
 def main():
-    try:
-        # Load params from params.yaml (configuration file)
-        # params = load_params('params.yaml')
-        
-        # Load data
-        X_train, y_train = load_data("./data/processed/X_train.npy", "./data/processed/y_train.npy")
-        X_val, y_val = load_data("./data/processed/X_val.npy", "./data/processed/y_val.npy")
-        
-        # Get vocab size (number of unique words in the vocabulary)
-        vocab_size = 883 
-        sequence_length = X_train.shape[1]
-        
-        # Build and compile the model
-        model = build_model(vocab_size, sequence_length)
-        
-        # Train the model
-        train_model(model, X_train, y_train, X_val, y_val)
-        
-        # Save the trained model
-        save_model(model, './models/next_word_prediction_model.h5')
-        
-    except Exception as e:
-        logging.error("Error during model building and training: %s", e)
-        print(f"Error: {e}")
+    mlflow.set_experiment("LSTM_512_UNITS")
+
+    with mlflow.start_run() as run:
+        try:
+            params = load_params('params.yaml')
+            embedding_dim = params['model_building']['embedding_dim']
+            lstm_units = params['model_building']['lstm_units']
+            dropout = params['model_building']['dropout']
+            vocab_size = params['model_building']['vocab_size']
+            epochs = params['model_building']['epochs']
+            batch_size = params['model_building']['batch_size']
+            
+            # Define parameters
+            # params = {
+            #     "embedding_dim": 100,
+            #     "lstm_units": 512,
+            #     "batch_size": 32,
+            #     "epochs": 5,
+            #     "vocab_size": 883
+            # }
+            
+            # Log parameters
+            mlflow.log_params(params["model_building"])
+
+            # Load data
+            X_train, y_train = load_data("./data/processed/X_train.npy", "./data/processed/y_train.npy")
+            X_val, y_val = load_data("./data/processed/X_val.npy", "./data/processed/y_val.npy")
+
+            sequence_length = X_train.shape[1]
+            
+            # Build and compile the model
+            model = build_model(vocab_size, sequence_length, embedding_dim, lstm_units, dropout)
+            
+            # Train the model
+            history = train_model(model, X_train, y_train, X_val, y_val, batch_size, epochs)
+            
+            # Log metrics for each epoch
+            for epoch in range(epochs):
+                mlflow.log_metric("train_loss", history.history['loss'][epoch], step=epoch)
+                mlflow.log_metric("train_accuracy", history.history['accuracy'][epoch], step=epoch)
+                mlflow.log_metric("val_loss", history.history['val_loss'][epoch], step=epoch)
+                mlflow.log_metric("val_accuracy", history.history['val_accuracy'][epoch], step=epoch)
+            
+            # Save the trained model locally
+            model_path = "./models/LSTM_512.h5"
+            save_model(model, model_path)
+
+            # Log model as an MLflow artifact
+            mlflow.log_artifact(model_path)
+
+            # Log the model to MLflow in the best practice way
+            mlflow.keras.log_model(model, "model")
+
+            logging.info("MLflow tracking completed successfully.")
+
+        except Exception as e:
+            logging.error(f"Error during model building and training: {e}")
+            print(f"Error: {e}")
 
 if __name__ == "__main__":
     main()

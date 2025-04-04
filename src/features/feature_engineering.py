@@ -31,14 +31,14 @@ def load_data(file_path):
         logging.error("Unexpected error while loading file: %s", e)
         raise
 
-def split_X_y_from_padded_sequences(padded_sequences):
+def split_X_y_from_padded_sequences(padded_sequences, num_classes):
     """Splits the padded sequences into X (input) and y (target word)."""
     try:
         X = padded_sequences[:, :-1]  
         y = padded_sequences[:, -1]
         
         # One-hot encode y (target word)
-        y = to_categorical(y, num_classes=883) 
+        y = to_categorical(y, num_classes=num_classes) 
         
         logging.info(f"X and y split completed. X shape: {X.shape}, y shape: {y.shape}")
         return X, y
@@ -60,19 +60,22 @@ def main():
         logging.info("Feature engineering for Next Word Prediction started...")
         
         # Load parameters
-        # params = load_params('params.yaml')
-        # max_features = params['feature_engineering']['max_features']
+        params = load_params('params.yaml')
+        test_size = params['feature_engineering']['test_size']
+        num_classes = params['feature_engineering']['num_classes']
+        random_state = params['feature_engineering']['random_state']
+        
         
         # Load padded sequences
         padded_sequences = load_data('./data/interim/padded_sequences.npy')
         
         # Split into X and y
-        X, y = split_X_y_from_padded_sequences(padded_sequences)
+        X, y = split_X_y_from_padded_sequences(padded_sequences, num_classes)
         
         logging.info(f"Data after splitting into X and y - X shape: {X.shape}, y shape: {y.shape}")
         
         # Optionally split into train and validation sets
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=test_size, random_state=random_state)
         logging.info("Data split into training and validation sets.")
         
         # Save train and validation sets inside the processed folder

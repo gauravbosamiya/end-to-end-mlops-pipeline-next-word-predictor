@@ -1,0 +1,15 @@
+feature_engineering:
+  test_size: 0.20
+  num_classes: 883
+  random_state: 42
+
+model_building:
+  embedding_dim: 100
+  lstm_units: 512
+  dropout: 0.2
+  vocab_size: 883
+  epochs: 1
+  batch_size: 32
+
+model_evaluaton:
+  sample_size: 5

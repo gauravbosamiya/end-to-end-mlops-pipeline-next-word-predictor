@@ -31,3 +31,8 @@
     - model_building.py
     - model_evaluation.py
     - register_model.py
+18. add file - dvc.yaml (till model evaluation.metrics)
+19. add file - params.yaml
+20. DVC pipeline is ready to run - dvc repro
+21. Once do - dvc status
+22. git add - commit - push
