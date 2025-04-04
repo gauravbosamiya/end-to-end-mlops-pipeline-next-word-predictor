@@ -16,7 +16,6 @@ mlflow.set_tracking_uri("https://dagshub.com/gauravbosamiya/end-to-end-mlops-pip
 dagshub.init(repo_owner="gauravbosamiya", repo_name="end-to-end-mlops-pipeline-next-word-predictor", mlflow=True)
 
 
-
 def load_params(params_path):
     try:
         with open(params_path, "r") as file:
@@ -81,35 +80,72 @@ def save_model_info(run_id, model_path, file_path):
         logging.error("Error saving model info: %s", e)
         raise
 
+# def main():
+#     mlflow.set_experiment("my-dvc-pipeline")
+
+#     with mlflow.start_run() as run:
+#         try:
+#             params = load_params('params.yaml')
+#             sample_size = params['model_evaluation']['sample_size']
+            
+#             mlflow.log_params(params["model_evaluation"])
+            
+#             X_test, y_test = load_data("./data/processed/X_val.npy", "./data/processed/y_val.npy")
+#             model_path = "./models/LSTM_512.h5"
+
+#             # Load and evaluate model
+#             model = load_model(model_path)
+#             perplexity = compute_perplexity_sample(model, X_test, y_test, sample_size)
+
+#             metrics = {"perplexity": perplexity}
+
+#             # Log metric to MLflow (after ensuring it's a float)
+#             mlflow.log_metric("perplexity", float(perplexity))
+
+#             # Save metrics JSON file
+#             save_metrics(metrics, "./reports/evaluation_metrics.json")
+#             mlflow.log_artifact("./reports/evaluation_metrics.json")
+
+#             # Save model info
+#             save_model_info(run.info.run_id, "model", './reports/model_info.json')
+#             mlflow.log_artifact("./reports/model_info.json")
+
+#             mlflow.keras.log_model(model, "model")
+
+#             logging.info("Model evaluation and MLflow logging completed successfully.")
+#         except Exception as e:
+#             logging.error("Evaluation process failed: %s", e)
+#             print(f"Error: {e}")
+
+
 def main():
     mlflow.set_experiment("my-dvc-pipeline")
 
     with mlflow.start_run() as run:
         try:
             params = load_params('params.yaml')
-            sample_size = params['model_evaluation']['sample_size']
+            print("Loaded Parameters:", params)  # Debugging step
             
+            if "model_evaluation" not in params:
+                raise KeyError("Key 'model_evaluation' not found in params.yaml")
+
+            sample_size = params["model_evaluation"]["sample_size"]
             mlflow.log_params(params["model_evaluation"])
-            
+
             X_test, y_test = load_data("./data/processed/X_val.npy", "./data/processed/y_val.npy")
             model_path = "./models/LSTM_512.h5"
 
-            # Load and evaluate model
             model = load_model(model_path)
             perplexity = compute_perplexity_sample(model, X_test, y_test, sample_size)
 
             metrics = {"perplexity": perplexity}
 
-            # Log metric to MLflow (after ensuring it's a float)
             mlflow.log_metric("perplexity", float(perplexity))
+            save_metrics(metrics, "./reports/evaluation_metrics.json")
+            mlflow.log_artifact("./reports/evaluation_metrics.json")
 
-            # Save metrics JSON file
-            save_metrics(metrics, "reports/evaluation_metrics.json")
-            mlflow.log_artifact("reports/evaluation_metrics.json")
-
-            # Save model info
-            save_model_info(run.info.run_id, "model", 'reports/model_info.json')
-            mlflow.log_artifact("reports/model_info.json")
+            save_model_info(run.info.run_id, "model", './reports/model_info.json')
+            mlflow.log_artifact("./reports/model_info.json")
 
             mlflow.keras.log_model(model, "model")
 
@@ -117,6 +153,7 @@ def main():
         except Exception as e:
             logging.error("Evaluation process failed: %s", e)
             print(f"Error: {e}")
+
 
 if __name__ == "__main__":
     main()

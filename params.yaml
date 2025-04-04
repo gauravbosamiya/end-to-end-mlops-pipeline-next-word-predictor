@@ -11,5 +11,5 @@ model_building:
   epochs: 1
   batch_size: 32
 
-model_evaluaton:
-  sample_size: 5
+model_evaluation:
+  sample_size: 100

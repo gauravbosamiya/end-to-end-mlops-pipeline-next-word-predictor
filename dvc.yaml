@@ -41,15 +41,15 @@ stages:
     outs:
     - models/LSTM_512.h5
 
-  model_evaluaton:
+  model_evaluation:
     cmd: python src/model/model_evaluation.py
     deps:
     - models/LSTM_512.h5
     - src/model/model_evaluation.py
     params:
-    - model_evaluaton.sample_size
+    - model_evaluation.sample_size
     metrics:
-    - reports/evaluation_metrics
+    - reports/evaluation_metrics.json
     outs:
     - reports/model_info.json
 

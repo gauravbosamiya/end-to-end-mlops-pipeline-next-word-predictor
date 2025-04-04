@@ -7,6 +7,7 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from src.logger import logging
 import os
+import pickle
 
 def preprocess_text(text):
     """Cleans and preprocesses text."""
@@ -18,25 +19,33 @@ def tokenized_text(text):
     """Tokenizes text and returns tokenizer and word index."""
     tokenizer = Tokenizer()
     tokenizer.fit_on_texts([text])
-
     logging.info(f"Total word in vocab: {len(tokenizer.word_index)}")
     
     return tokenizer
 
 
+
 def generate_padded_sequences(text, tokenizer):
     """Generates padded input sequences from tokenized text."""
     input_sequences = []
-    
-    for sentence in text.split("\n"):
+
+    # Keep original line breaks
+    sentences = text.strip().split("\n")
+
+    for sentence in sentences:
         tokenized_sent = tokenizer.texts_to_sequences([sentence])[0]
         for i in range(1, len(tokenized_sent)):
             input_sequences.append(tokenized_sent[:i+1])
-            
-    max_len = max([len(x) for x in input_sequences])
-    
+
+    # Hardcoding max_len to match the first result
+    max_len = 178
+    # max_len = max([len(x) for x in input_sequences])
+
+    logging.info(f"maxlen : {max_len}")
+
     padded_sequences = pad_sequences(input_sequences, maxlen=max_len, padding="pre")
     return padded_sequences, max_len
+
 
 
 def main():
@@ -55,8 +64,12 @@ def main():
         os.makedirs(data_path, exist_ok=True)
         
         # Save the padded sequences as a numpy array
-
         np.save(os.path.join(data_path, "padded_sequences.npy"), padded_sequences)
+        
+        # Save the tokenizer
+        with open(os.path.join(data_path, "tokenizer.pkl"), "wb") as f:
+            pickle.dump(tokenizer, f)
+        logging.info("Tokenizer saved successfully.")
         
         # Optionally save tokenizer's word index as a dictionary in a text file
         with open(os.path.join(data_path, "word_index.txt"), "w") as f:
@@ -72,9 +85,3 @@ def main():
         
 if __name__=="__main__":
     main()
-        
-
-
-    
-    
-    
