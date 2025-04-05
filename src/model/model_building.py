@@ -153,6 +153,7 @@ from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
 import yaml
 import os
 import dagshub
+import json
 import logging
 
 # Set up logging
@@ -241,6 +242,12 @@ def save_model(model, file_path):
     except Exception as e:
         logging.error(f"Error saving the model: {e}")
         raise
+    
+    
+def save_metrics(metrics, filepath):
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    with open(filepath, 'w') as f:
+        json.dump(metrics, f, indent=4)
 
 # Main function with MLflow Tracking
 def main():
@@ -271,6 +278,14 @@ def main():
             
             # Train the model
             history = train_model(model, X_train, y_train, X_val, y_val, batch_size, epochs)
+            
+            final_metrics = {
+                "final_train_loss": history.history['loss'][-1],
+                "final_train_accuracy": history.history['accuracy'][-1],
+                "final_val_loss": history.history['val_loss'][-1],
+                "final_val_accuracy": history.history['val_accuracy'][-1]
+            }
+            save_metrics(final_metrics, "./reports/evaluation_metrics.json")
             
             # Log metrics for each epoch
             for epoch in range(epochs):

@@ -125,7 +125,7 @@ def main():
             mlflow.log_metric("perplexity", float(perplexity))
             save_metrics(metrics, "./reports/evaluation_metrics.json")
             mlflow.log_artifact("./reports/evaluation_metrics.json")
-
+            
             save_model_info(run.info.run_id, "model", './reports/model_info.json')
             mlflow.log_artifact("./reports/model_info.json")
 
