@@ -37,7 +37,7 @@ def generate_padded_sequences(text, tokenizer):
         for i in range(1, len(tokenized_sent)):
             input_sequences.append(tokenized_sent[:i+1])
 
-    # Hardcoding max_len to match the first result
+    # Hardcoding max_len to match the notebook result
     max_len = 178
     # max_len = max([len(x) for x in input_sequences])
 
