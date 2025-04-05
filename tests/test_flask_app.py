@@ -15,7 +15,7 @@ class FlaskAppTests(unittest.TestCase):
     def test_predict_page(self):
         response = self.client.post('/predict', data=dict(text="I love this!"))
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'predicted_text', response.data or response.data.decode('utf-8'))  
+        self.assertIn(b'<div class="prediction">', response.data)  
 
 if __name__ == '__main__':
     unittest.main()
