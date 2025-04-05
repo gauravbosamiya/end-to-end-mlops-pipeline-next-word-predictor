@@ -12,11 +12,34 @@ import warnings
 warnings.filterwarnings("ignore")
 import time
 import pickle
+import os
 
 
-mlflow.set_tracking_uri("https://dagshub.com/gauravbosamiya/end-to-end-mlops-pipeline-next-word-predictor.mlflow")
-dagshub.init(repo_owner="gauravbosamiya", repo_name="end-to-end-mlops-pipeline-next-word-predictor", mlflow=True)
+# for production
+# --------------------------------------------------------------------------------------------------------------
+dagshub_token = os.getenv("CAPSTONE_TEST")
+if not dagshub_token:
+    raise EnvironmentError("CAPSTONE_TEST environment variable is not set")
 
+os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+dagshub_url = "https://dagshub.com"
+repo_owner="gauravbosamiya"
+repo_name="end-to-end-mlops-pipeline-next-word-predictor"
+
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+
+# --------------------------------------------------------------------------------------------------------------
+
+
+
+# --------------------------------------------------------------------------------------------------------------
+# for local
+# --------------------------------------------------------------------------------------------------------------
+# mlflow.set_tracking_uri("https://dagshub.com/gauravbosamiya/end-to-end-mlops-pipeline-next-word-predictor.mlflow")
+# dagshub.init(repo_owner="gauravbosamiya", repo_name="end-to-end-mlops-pipeline-next-word-predictor", mlflow=True)
+# --------------------------------------------------------------------------------------------------------------
 
 
 registry = CollectorRegistry()
