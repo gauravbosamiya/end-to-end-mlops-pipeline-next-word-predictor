@@ -52,6 +52,7 @@ stages:
     - reports/evaluation_metrics.json
     outs:
     - reports/model_info.json
+    - reports/accuracy_loss.json
 
   model_registration:
     cmd: python src/model/register_model.py

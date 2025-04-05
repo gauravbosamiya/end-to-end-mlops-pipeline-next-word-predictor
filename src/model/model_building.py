@@ -244,16 +244,16 @@ def save_model(model, file_path):
         raise
     
     
-def save_metrics(metrics, filepath):
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, 'w') as f:
-        json.dump(metrics, f, indent=4)
+# def save_metrics(metrics, filepath):
+#     os.makedirs(os.path.dirname(filepath), exist_ok=True)
+#     with open(filepath, 'w') as f:
+#         json.dump(metrics, f, indent=4)
 
 # Main function with MLflow Tracking
 def main():
-    mlflow.set_experiment("my-dvc-pipeline")
+    # mlflow.set_experiment("my-dvc-pipeline")
 
-    with mlflow.start_run() as run:
+    # with mlflow.start_run() as run:
         try:
             # Define parameters
             params = load_params('params.yaml')
@@ -265,7 +265,7 @@ def main():
             batch_size = params['model_building']['batch_size']
             
             # Log parameters
-            mlflow.log_params(params["model_building"])
+            # mlflow.log_params(params["model_building"])
 
             # Load data
             X_train, y_train = load_data("./data/processed/X_train.npy", "./data/processed/y_train.npy")
@@ -279,32 +279,24 @@ def main():
             # Train the model
             history = train_model(model, X_train, y_train, X_val, y_val, batch_size, epochs)
             
-            final_metrics = {
-                "final_train_loss": history.history['loss'][-1],
-                "final_train_accuracy": history.history['accuracy'][-1],
-                "final_val_loss": history.history['val_loss'][-1],
-                "final_val_accuracy": history.history['val_accuracy'][-1]
-            }
-            save_metrics(final_metrics, "./reports/evaluation_metrics.json")
-            
             # Log metrics for each epoch
-            for epoch in range(epochs):
-                mlflow.log_metric("train_loss", history.history['loss'][epoch], step=epoch)
-                mlflow.log_metric("train_accuracy", history.history['accuracy'][epoch], step=epoch)
-                mlflow.log_metric("val_loss", history.history['val_loss'][epoch], step=epoch)
-                mlflow.log_metric("val_accuracy", history.history['val_accuracy'][epoch], step=epoch)
+            # for epoch in range(epochs):
+            #     mlflow.log_metric("train_loss", history.history['loss'][epoch], step=epoch)
+            #     mlflow.log_metric("train_accuracy", history.history['accuracy'][epoch], step=epoch)
+            #     mlflow.log_metric("val_loss", history.history['val_loss'][epoch], step=epoch)
+            #     mlflow.log_metric("val_accuracy", history.history['val_accuracy'][epoch], step=epoch)
             
             # Save the trained model locally
             model_path = "./models/LSTM_512.h5"
             save_model(model, model_path)
 
             # Log model as an MLflow artifact
-            mlflow.log_artifact(model_path)
+            # mlflow.log_artifact(model_path)
 
             # Log the model to MLflow in the best practice way
-            mlflow.keras.log_model(model, "model")
+            # mlflow.keras.log_model(model, "model")
 
-            logging.info("MLflow tracking completed successfully.")
+            logging.info("Model Building Completed .")
 
         except Exception as e:
             logging.error(f"Error during model building and training: {e}")

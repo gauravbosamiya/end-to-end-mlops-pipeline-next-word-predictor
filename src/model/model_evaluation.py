@@ -106,32 +106,51 @@ def main():
     with mlflow.start_run() as run:
         try:
             params = load_params('params.yaml')
-            print("Loaded Parameters:", params)  # Debugging step
-            
-            if "model_evaluation" not in params:
-                raise KeyError("Key 'model_evaluation' not found in params.yaml")
-
             sample_size = params["model_evaluation"]["sample_size"]
             mlflow.log_params(params["model_evaluation"])
 
-            X_test, y_test = load_data("./data/processed/X_val.npy", "./data/processed/y_val.npy")
-            model_path = "./models/LSTM_512.h5"
 
+            X_train, y_train = load_data("./data/processed/X_train.npy", "./data/processed/y_train.npy")
+            X_test, y_test = load_data("./data/processed/X_val.npy", "./data/processed/y_val.npy")
+            
+            model_path = "./models/LSTM_512.h5"
             model = load_model(model_path)
+            
+            train_loss, train_accuracy = model.evaluate(X_train, y_train, verbose=0)
+            val_loss, val_accuracy = model.evaluate(X_test, y_test, verbose=0)
+
+            
             perplexity = compute_perplexity_sample(model, X_test, y_test, sample_size)
 
-            metrics = {"perplexity": perplexity}
+            accuracy_loss_metrics = {
+                "train_loss": float(train_loss),
+                "train_accuracy": float(train_accuracy),
+                "val_loss": float(val_loss),
+                "val_accuracy": float(val_accuracy)
+            }
+            
+            save_metrics(accuracy_loss_metrics, "./reports/accuracy_loss.json")
+            mlflow.log_artifact("./reports/accuracy_loss.json")
 
-            mlflow.log_metric("perplexity", float(perplexity))
+
+            metrics = {"perplexity": perplexity}
             save_metrics(metrics, "./reports/evaluation_metrics.json")
+            mlflow.log_metric("perplexity", float(perplexity))
             mlflow.log_artifact("./reports/evaluation_metrics.json")
+            
+            mlflow.log_metric("train_loss", float(train_loss))
+            mlflow.log_metric("train_accuracy", float(train_accuracy))
+            mlflow.log_metric("val_loss", float(val_loss))
+            mlflow.log_metric("val_accuracy", float(val_accuracy))
             
             save_model_info(run.info.run_id, "model", './reports/model_info.json')
             mlflow.log_artifact("./reports/model_info.json")
 
+            # Log model
             mlflow.keras.log_model(model, "model")
 
             logging.info("Model evaluation and MLflow logging completed successfully.")
+            
         except Exception as e:
             logging.error("Evaluation process failed: %s", e)
             print(f"Error: {e}")
