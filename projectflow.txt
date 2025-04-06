@@ -14,7 +14,7 @@
 8. Go to: https://dagshub.com/dashboard
 9. Create > New Repo > Connect a repo > (Github) Connect > Select your repo > Connect
 10. Copy experiment tracking url and code snippet. (Also try: Go To MLFlow UI)
-11. pip install dagshub & mlflow
+11. pip install dagshub & mlflow & tensorflow
 
 12. Run the exp notebooks
 13. git add - commit - push
@@ -53,8 +53,19 @@
 31. Add .github/workflows/ci.yaml file
 
 32. Create key token on Dagshub for auth: Go to dagshub repo > Your settings > Tokens > Generate new token
-    >> Please make sure to save token << >> capstone_test: 54b1d67648a9b1267ef906fsdfsd8b292f779f0<<
+    >> Please make sure to save token << >> capstone_test: a552cf9e80e31aa05adc97ecde03a3ba904a2db5<<
     >> Add this auth token to github secret&var and update on ci file
 
-
 31. Add dir "tests"&"scripts" and files within. This will contain our test related scripts for CI.
+
+>>>>> Moving to Docker <<<<<
+32. pip install pipreqs
+33. cd flask_app & do "pipreqs . --force"
+34. Add dockerfile and start docker-desktop in background
+    Also before proceeding make sure: [switch the mlflow server setup to param version, change cmd on dockerfile]
+35. go to root dir and: "docker build -t next-word-predictor:latest ."
+36. Try running the image: "docker run -p 8888:5000 next-word-predictor:latest"
+    - This run will give 'OSError: capstone_test environment variable is not set'...obviously
+    - alternate: docker run -p 8888:5000 -e CAPSTONE_TEST=a552cf9e80e31aa05adc97ecde03a3ba904a2db5 next-word-predictor:latest
+    - docker push youruser/next-word-predictor:latest (optional)
+    - optional: try to delete image locally and pull it from dockerhub and run (optional)

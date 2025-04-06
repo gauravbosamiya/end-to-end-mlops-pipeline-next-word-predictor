@@ -2,7 +2,6 @@ import numpy as np
 import tensorflow as tf 
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from src.logger import logging
 import mlflow
 import dagshub
 from flask import Flask, render_template, request, jsonify
@@ -133,21 +132,10 @@ def predict(num_words=30):
     return render_template("index.html", predicted_text=text)
 
 
-
 @app.route("/metrics", methods=["GET"])
 def metrics():
     """Expose only custom Prometheus metrics."""
     return generate_latest(registry), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 if __name__ == "__main__":
-    app.run(debug=True) # for local use
-    # app.run(debug=True, host="0.0.0.0", port=5000)  # Accessible from outside Docker
-
-
-
-
-        
-    
-
-
-    
+    app.run(debug=True, host="0.0.0.0", port=5000)
