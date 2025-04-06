@@ -8,7 +8,7 @@ model_building:
   lstm_units: 512
   dropout: 0.2
   vocab_size: 883
-  epochs: 1
+  epochs: 2
   batch_size: 32
 
 model_evaluation:

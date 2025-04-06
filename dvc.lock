@@ -64,8 +64,8 @@ stages:
       nfiles: 4
     - path: src/model/model_building.py
       hash: md5
-      md5: 256afa2cde651d558568f82536a0f4cf
-      size: 12297
+      md5: ba0e282773463d550b0c35b8f95a8d33
+      size: 11853
     params:
       params.yaml:
         model_building.batch_size: 32
@@ -77,14 +77,14 @@ stages:
     outs:
     - path: models/LSTM_512.h5
       hash: md5
-      md5: 6a406399a84eabcfbfb2ac489fdab593
+      md5: a8ee88ded30e572aeb5691bd0e91a14d
       size: 21596404
   model_evaluation:
     cmd: python src/model/model_evaluation.py
     deps:
     - path: models/LSTM_512.h5
       hash: md5
-      md5: 6a406399a84eabcfbfb2ac489fdab593
+      md5: a8ee88ded30e572aeb5691bd0e91a14d
       size: 21596404
     - path: src/model/model_evaluation.py
       hash: md5
@@ -96,22 +96,22 @@ stages:
     outs:
     - path: reports/accuracy_loss.json
       hash: md5
-      md5: 81a7c16278c88bbe3bc4265b3bc4ca3a
+      md5: 1fd67d6b38ea9f1980da73733dc132a4
       size: 162
     - path: reports/evaluation_metrics.json
       hash: md5
-      md5: c61224e4ef85ba2e503ad97f640e43d2
+      md5: 82a3ffdc9865719bd7f5d4e0dc261290
       size: 42
     - path: reports/model_info.json
       hash: md5
-      md5: e66399d818fe4f2332006e9db72e721a
+      md5: 70fc6cbce74817c5e63a6eb9134ce1a8
       size: 82
   model_registration:
     cmd: python src/model/register_model.py
     deps:
     - path: reports/model_info.json
       hash: md5
-      md5: e66399d818fe4f2332006e9db72e721a
+      md5: 70fc6cbce74817c5e63a6eb9134ce1a8
       size: 82
     - path: src/model/register_model.py
       hash: md5
